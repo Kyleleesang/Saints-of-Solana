@@ -11,12 +11,7 @@ Saints of Solana is comprised of two core components: an on-chain program, and a
 
 Clone the repo, and run `yarn start` to deploy.
 
-```bash
-$ git clone https://github.com/metaplex-foundation/metaplex.git
-$ cd metaplex/js
-$ yarn install && yarn bootstrap && yarn build
-$ yarn start
-```
+
 
 Navigate to `http://localhost:3000/` to explore the deployed application.
 
@@ -29,9 +24,6 @@ bindings that allow interactivity.
 
 We have a few channels for contact:
 
-- [Discord](https://discord.gg/metaplex)
-- [@metaplex](https://twitter.com/metaplex) on Twitter
-- [GitHub Issues](https://github.com/metaplex-foundation/metaplex/issues)
 
 # Protocol
 
