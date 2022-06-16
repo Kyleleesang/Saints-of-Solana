@@ -69,7 +69,7 @@ pub const BASE_AUCTION_DATA_SIZE: usize = 32 + 32 + 9 + 9 + 9 + 9 + 1 + 32 + 1 +
 pub const BID_LENGTH: usize = 32 + 8;
 #[repr(C)]
 #[derive(Clone, BorshSerialize, BorshDeserialize, PartialEq, Debug)]
-pub struct AuctionData {
+pub struct GlobalAuctionData {
     /// Pubkey of the authority with permission to modify this auction.
     pub authority: Pubkey,
     /// Pubkey of the resource being bid on.
@@ -77,6 +77,7 @@ pub struct AuctionData {
     /// interactin that happens in metaplex during redemptions due to some low level rust error
     /// that happens when AuctionData has too many fields. This field was the least used.
     ///pub resource: Pubkey,
+    pub collectionID: PubKey,
     /// Token mint for the SPL token being used to bid
     pub token_mint: Pubkey,
     /// The time the last bid was placed, used to keep track of auction timing.
@@ -109,7 +110,7 @@ pub struct GlobalCreatorAuctionData {
     /// Token mint for the SPL token being used to bid
     /// 
     /// dont need as we arent bidding on a token
-    //pub token_mint: Pubkey,
+    pub token_mint: Pubkey,
     
     /// The time the last bid was placed, used to keep track of auction timing.
     pub last_bid: Option<UnixTimestamp>,
