@@ -77,7 +77,7 @@ pub struct GlobalAuctionData {
     /// interactin that happens in metaplex during redemptions due to some low level rust error
     /// that happens when AuctionData has too many fields. This field was the least used.
     ///pub resource: Pubkey,
-    pub collectionID: PubKey,
+    pub Degens: [Accounts],
     /// Token mint for the SPL token being used to bid
     pub token_mint: Pubkey,
     /// The time the last bid was placed, used to keep track of auction timing.
@@ -101,17 +101,16 @@ pub struct GlobalAuctionData {
 pub struct GlobalCreatorAuctionData {
     /// Pubkey of the authority with permission to modify this auction.
     pub authority: Pubkey,
-    pub creator: PubKey
+    pub creator: PubKey,
     /// Pubkey of the resource being bid on.
     /// TODO try to bring this back some day. Had to remove this due to a stack access violation bug
     /// interactin that happens in metaplex during redemptions due to some low level rust error
     /// that happens when AuctionData has too many fields. This field was the least used.
     ///pub resource: Pubkey,
     /// Token mint for the SPL token being used to bid
-    /// 
+    pub Degens: &[AccountInfo],
     /// dont need as we arent bidding on a token
     pub token_mint: Pubkey,
-    
     /// The time the last bid was placed, used to keep track of auction timing.
     pub last_bid: Option<UnixTimestamp>,
     /// Slot time the auction was officially ended by.
@@ -169,6 +168,9 @@ impl AuctionDataExtended {
             None
         }
     }
+    //keep this as a single call function instead of array of accounts added
+    //otherwise people will just run it once and spam the entire global auction bids
+    pub fn addDegen(bid_size: u64)
 
     fn find_instant_sale_beginning<'a>(data: &'a Ref<'a, &'a mut [u8]>) -> Option<usize> {
         // total_uncancelled_bids + tick_size Option

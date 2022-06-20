@@ -92,7 +92,6 @@ pub fn claim_bid(
     msg!("+ Processing ClaimBid");
     let accounts = parse_accounts(program_id, accounts)?;
     let clock = Clock::from_account_info(accounts.clock_sysvar)?;
-
     // The account within the pot must be owned by us.
     let actual_account: Account = assert_initialized(accounts.bidder_pot_token)?;
     if actual_account.owner != *accounts.auction.key {
@@ -103,11 +102,9 @@ pub fn claim_bid(
     let auction_bump = assert_derivation(
         program_id,
         accounts.auction,
-        &[
-            PREFIX.as_bytes(),
-            program_id.as_ref(),
-            args.resource.as_ref(),
-        ],
+        &[PREFIX.as_bytes(),
+          program_id.as_ref(),
+          args.resource.as_ref()],
     )?;
 
     let auction_seeds = &[
