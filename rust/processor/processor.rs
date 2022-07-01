@@ -77,7 +77,7 @@ pub struct GlobalAuctionData {
     /// interactin that happens in metaplex during redemptions due to some low level rust error
     /// that happens when AuctionData has too many fields. This field was the least used.
     ///pub resource: Pubkey,
-    pub Degens: [Accounts],
+    pub BidderStack: vec<>,
     /// Token mint for the SPL token being used to bid
     /// replace with candy Machine ID that chief said
     pub token_mint: Pubkey,
@@ -109,7 +109,7 @@ pub struct GlobalCreatorAuctionData {
     /// that happens when AuctionData has too many fields. This field was the least used.
     ///pub resource: Pubkey,
     /// Token mint for the SPL token being used to bid
-    pub Degens: &[AccountInfo],
+    pub BidderStack: vec<>,
     /// dont need as we arent bidding on a token
     pub token_mint: Pubkey,
     /// The time the last bid was placed, used to keep track of auction timing.
@@ -496,8 +496,7 @@ impl AuctionState {
 /// Bids associate a bidding key with an amount bid.
 #[repr(C)]
 #[derive(Clone, BorshSerialize, BorshDeserialize, PartialEq, Debug)]
-//add stop loss field to cancel bid if the price hits below that
-pub struct Bid(pub Pubkey, pub u64, pub StopLoss);
+pub struct Bid(pub Pubkey, pub u64);
 
 /// BidState tracks the running state of an auction, each variant represents a different kind of
 /// auction being run.
@@ -506,6 +505,7 @@ pub struct Bid(pub Pubkey, pub u64, pub StopLoss);
 pub enum BidState {
     EnglishAuction { bids: Vec<Bid>, max: usize },
     OpenEdition { bids: Vec<Bid>, max: usize },
+    GlobalAuction { bids:Vec<Bid>, max: usize}
 }
 
 /// Bidding Implementations.
@@ -527,6 +527,13 @@ impl BidState {
         BidState::OpenEdition {
             bids: vec![],
             max: 0,
+        }
+    }
+    //make sure the entirety of global bids doesnt get too big for the contract
+    pub fn new_global_auction(n: usize) -> Self {
+        BidState::GlobalAuction{
+            bids: vec![],
+            max: n,
         }
     }
 
@@ -798,7 +805,7 @@ impl BidderMetadata {
         Ok(bidder_meta)
     }
 }
-
+/*
 #[repr(C)]
 #[derive(Clone, BorshSerialize, BorshDeserialize, PartialEq)]
 pub struct BidderPot {
@@ -822,4 +829,5 @@ impl BidderPot {
 
         Ok(bidder_pot)
     }
+    
 }
