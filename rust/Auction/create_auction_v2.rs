@@ -28,7 +28,7 @@ use {
 #[derive(Clone, BorshSerialize, BorshDeserialize, PartialEq)]
 pub struct CreateAuctionArgsV2 {
     /// How many winners are allowed for this auction. See AuctionData.
-    pub winners: WinnerLimit,
+    pub TopBidder: PubKey,
     /// End time is the cut-off point that the auction is forced to end by. See AuctionData.
     pub end_auction_at: Option<UnixTimestamp>,
     /// Gap time is how much time after the previous bid where the auction ends. See AuctionData.
@@ -83,7 +83,7 @@ pub fn create_auction_v2(
         program_id,
         accounts,
         CreateAuctionArgs {
-            winners: args.winners,
+            winners: args.TopBidder,
             end_auction_at: args.end_auction_at,
             end_auction_gap: args.end_auction_gap,
             token_mint: args.token_mint,

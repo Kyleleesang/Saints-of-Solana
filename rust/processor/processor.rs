@@ -79,6 +79,7 @@ pub struct GlobalAuctionData {
     ///pub resource: Pubkey,
     pub Degens: [Accounts],
     /// Token mint for the SPL token being used to bid
+    /// replace with candy Machine ID that chief said
     pub token_mint: Pubkey,
     /// The time the last bid was placed, used to keep track of auction timing.
     pub last_bid: Option<UnixTimestamp>,
@@ -170,7 +171,9 @@ impl AuctionDataExtended {
     }
     //keep this as a single call function instead of array of accounts added
     //otherwise people will just run it once and spam the entire global auction bids
-    pub fn addDegen(bid_size: u64)
+    pub fn addDegen(bid_size: u64){
+        
+    }
 
     fn find_instant_sale_beginning<'a>(data: &'a Ref<'a, &'a mut [u8]>) -> Option<usize> {
         // total_uncancelled_bids + tick_size Option
@@ -493,7 +496,8 @@ impl AuctionState {
 /// Bids associate a bidding key with an amount bid.
 #[repr(C)]
 #[derive(Clone, BorshSerialize, BorshDeserialize, PartialEq, Debug)]
-pub struct Bid(pub Pubkey, pub u64);
+//add stop loss field to cancel bid if the price hits below that
+pub struct Bid(pub Pubkey, pub u64, pub StopLoss);
 
 /// BidState tracks the running state of an auction, each variant represents a different kind of
 /// auction being run.

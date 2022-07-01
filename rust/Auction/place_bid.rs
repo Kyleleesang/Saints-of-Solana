@@ -55,16 +55,19 @@ pub struct PlaceBidArgs {
     pub amount: u64,
     /// Resource being bid on.
     pub resource: Pubkey,
+    //put a stop loss which will stop execution of the bid if the price falls below
+    pub StopLoss : u64
 }
 
 struct Accounts<'a, 'b: 'a> {
     auction: &'a AccountInfo<'b>,
     auction_extended: &'a AccountInfo<'b>,
     bidder_meta: &'a AccountInfo<'b>,
-    bidder_pot: &'a AccountInfo<'b>,
-    bidder_pot_token: &'a AccountInfo<'b>,
+    //Don't think we need a bidder pot
+    //bidder_pot: &'a AccountInfo<'b>,
+    //bidder_pot_token: &'a AccountInfo<'b>,
     bidder: &'a AccountInfo<'b>,
-    bidder_token: &'a AccountInfo<'b>,
+    //bidder_token: &'a AccountInfo<'b>,
     clock_sysvar: &'a AccountInfo<'b>,
     mint: &'a AccountInfo<'b>,
     payer: &'a AccountInfo<'b>,
@@ -81,9 +84,9 @@ fn parse_accounts<'a, 'b: 'a>(
     let account_iter = &mut accounts.iter();
     let accounts = Accounts {
         bidder: next_account_info(account_iter)?,
-        bidder_token: next_account_info(account_iter)?,
-        bidder_pot: next_account_info(account_iter)?,
-        bidder_pot_token: next_account_info(account_iter)?,
+        //bidder_token: next_account_info(account_iter)?,
+        //bidder_pot: next_account_info(account_iter)?,
+        //bidder_pot_token: next_account_info(account_iter)?,
         bidder_meta: next_account_info(account_iter)?,
         auction: next_account_info(account_iter)?,
         auction_extended: next_account_info(account_iter)?,
@@ -98,10 +101,10 @@ fn parse_accounts<'a, 'b: 'a>(
 
     assert_owned_by(accounts.auction, program_id)?;
     assert_owned_by(accounts.auction_extended, program_id)?;
-    assert_owned_by(accounts.bidder_token, &spl_token::id())?;
+    //assert_owned_by(accounts.bidder_token, &spl_token::id())?;
 
-    if !accounts.bidder_pot.data_is_empty() {
-        assert_owned_by(accounts.bidder_pot, program_id)?;
+    //if !accounts.bidder_pot.data_is_empty() {
+      //  assert_owned_by(accounts.bidder_pot, program_id)?;
     }
     if !accounts.bidder_meta.data_is_empty() {
         assert_owned_by(accounts.bidder_meta, program_id)?;
@@ -190,37 +193,31 @@ pub fn place_bid<'r, 'b: 'r>(
     let pot_bump = assert_derivation(
         program_id,
         accounts.bidder_pot,
-        &[
-            PREFIX.as_bytes(),
-            program_id.as_ref(),
-            accounts.auction.key.as_ref(),
-            accounts.bidder.key.as_ref(),
-        ],
+        &[PREFIX.as_bytes(),
+          program_id.as_ref(),
+          accounts.auction.key.as_ref(),
+          accounts.bidder.key.as_ref(),],
     )?;
 
     // The account within the pot must be owned by us.
     let actual_account: Account = assert_initialized(accounts.bidder_pot_token)?;
-    if actual_account.owner != *accounts.auction.key {
+    if (actual_account.owner != *accounts.auction.key) {
         return Err(AuctionError::BidderPotTokenAccountOwnerMismatch.into());
     }
 
-    if actual_account.delegate != COption::None {
+    if (actual_account.delegate != COption::None) {
         return Err(AuctionError::DelegateShouldBeNone.into());
     }
 
-    if actual_account.close_authority != COption::None {
+    if (actual_account.close_authority != COption::None) {
         return Err(AuctionError::CloseAuthorityShouldBeNone.into());
     }
 
     // Derive and load Auction.
-    let auction_bump = assert_derivation(
-        program_id,
-        accounts.auction,
-        &[
-            PREFIX.as_bytes(),
-            program_id.as_ref(),
-            args.resource.as_ref(),
-        ],
+    let auction_bump = assert_derivation(program_id, accounts.auction,
+        &[PREFIX.as_bytes(),
+          program_id.as_ref(),
+          args.resource.as_ref(),],
     )?;
 
     // Can't bid on an auction that isn't running.
@@ -263,18 +260,13 @@ pub fn place_bid<'r, 'b: 'r>(
     }
 
     // Update now we have new bid.
-    assert_derivation(
-        program_id,
-        accounts.auction_extended,
-        &[
-            PREFIX.as_bytes(),
-            program_id.as_ref(),
-            args.resource.as_ref(),
-            EXTENDED.as_bytes(),
-        ],
-    )?;
-    let mut auction_extended: AuctionDataExtended =
-        AuctionDataExtended::from_account_info(accounts.auction_extended)?;
+    assert_derivation(program_id, accounts.auction_extended,
+        &[PREFIX.as_bytes(),
+          program_id.as_ref(),
+          args.resource.as_ref(),
+          EXTENDED.as_bytes(),],
+        )?;
+    let mut auction_extended: AuctionDataExtended = AuctionDataExtended::from_account_info(accounts.auction_extended)?;
     auction_extended.total_uncancelled_bids = auction_extended
         .total_uncancelled_bids
         .checked_add(1)
