@@ -55,8 +55,6 @@ pub struct PlaceBidArgs {
     pub amount: u64,
     /// Resource being bid on.
     pub resource: Pubkey,
-    //put a stop loss which will stop execution of the bid if the price falls below
-    pub StopLoss : u64
 }
 
 struct Accounts<'a, 'b: 'a> {
@@ -105,7 +103,7 @@ fn parse_accounts<'a, 'b: 'a>(
 
     //if !accounts.bidder_pot.data_is_empty() {
       //  assert_owned_by(accounts.bidder_pot, program_id)?;
-    }
+    //}
     if !accounts.bidder_meta.data_is_empty() {
         assert_owned_by(accounts.bidder_meta, program_id)?;
     }
@@ -132,7 +130,6 @@ pub fn place_bid<'r, 'b: 'r>(
 ) -> ProgramResult {
     msg!("+ Processing PlaceBid");
     let accounts = parse_accounts(program_id, accounts)?;
-
     // Load the auction and verify this bid is valid.
     let mut auction = AuctionData::from_account_info(accounts.auction)?;
 
@@ -140,12 +137,12 @@ pub fn place_bid<'r, 'b: 'r>(
     let clock = Clock::from_account_info(accounts.clock_sysvar)?;
 
     // Verify auction has not ended.
-    if auction.ended(clock.unix_timestamp)? {
+    /*if auction.ended(clock.unix_timestamp)? {
         auction.state = auction.state.end()?;
         auction.serialize(&mut *accounts.auction.data.borrow_mut())?;
         msg!("Auction ended!");
         return Ok(());
-    }
+    */}
     // Derive Metadata key and load it.
     let metadata_bump = assert_derivation(
         program_id,

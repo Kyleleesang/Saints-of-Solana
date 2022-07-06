@@ -106,7 +106,10 @@ pub fn claim_bid(
           program_id.as_ref(),
           args.resource.as_ref()],
     )?;
-
+    //pass in token mint as argument into seeds to make it unique
+    //if there's another token mint throw an error
+    //if there's already an address generated with token mint then it already exist
+    //throw an error if address already exists
     let auction_seeds = &[
         PREFIX.as_bytes(),
         program_id.as_ref(),

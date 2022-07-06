@@ -26,13 +26,15 @@ use {
 
 #[repr(C)]
 #[derive(Clone, BorshSerialize, BorshDeserialize, PartialEq)]
-pub struct CreateAuctionArgsV2 {
+pub struct CreateGlobalAuctionArgsV2 {
     /// How many winners are allowed for this auction. See AuctionData.
     pub TopBidder: PubKey,
     /// End time is the cut-off point that the auction is forced to end by. See AuctionData.
-    pub end_auction_at: Option<UnixTimestamp>,
+    /// Global Auctions don't end so don't need anymore
+    //pub end_auction_at: Option<UnixTimestamp>,
     /// Gap time is how much time after the previous bid where the auction ends. See AuctionData.
-    pub end_auction_gap: Option<UnixTimestamp>,
+    /// don't need as global auctions don't end
+    //pub end_auction_gap: Option<UnixTimestamp>,
     /// Token mint for the SPL token used for bidding.
     pub token_mint: Pubkey,
     /// Authority
@@ -46,7 +48,8 @@ pub struct CreateAuctionArgsV2 {
     /// Add a minimum percentage increase each bid must meet.
     pub gap_tick_size_percentage: Option<u8>,
     /// Add a instant sale price.
-    pub instant_sale_price: Option<u64>,
+    /// don't need as tokens get dropped onto the stack
+    //pub instant_sale_price: Option<u64>,
     /// Auction name
     pub name: Option<AuctionName>,
 }
@@ -74,7 +77,7 @@ fn parse_accounts<'a, 'b: 'a>(
     Ok(accounts)
 }
 
-pub fn create_auction_v2(
+pub fn create_global_auction_v2(
     program_id: &Pubkey,
     accounts: &[AccountInfo],
     args: CreateAuctionArgsV2,
@@ -84,8 +87,8 @@ pub fn create_auction_v2(
         accounts,
         CreateAuctionArgs {
             winners: args.TopBidder,
-            end_auction_at: args.end_auction_at,
-            end_auction_gap: args.end_auction_gap,
+           // end_auction_at: args.end_auction_at,
+           // end_auction_gap: args.end_auction_gap,
             token_mint: args.token_mint,
             authority: args.authority,
             resource: args.resource,

@@ -77,7 +77,7 @@ pub struct GlobalAuctionData {
     /// interactin that happens in metaplex during redemptions due to some low level rust error
     /// that happens when AuctionData has too many fields. This field was the least used.
     ///pub resource: Pubkey,
-    pub BidderStack: vec<>,
+    pub BidderStack: vec<Bid>,
     /// Token mint for the SPL token being used to bid
     /// replace with candy Machine ID that chief said
     pub token_mint: Pubkey,
@@ -109,9 +109,9 @@ pub struct GlobalCreatorAuctionData {
     /// that happens when AuctionData has too many fields. This field was the least used.
     ///pub resource: Pubkey,
     /// Token mint for the SPL token being used to bid
-    pub BidderStack: vec<>,
     /// dont need as we arent bidding on a token
-    pub token_mint: Pubkey,
+    //pub token_mint: Pubkey,
+    pub BidderStack: vec<Bid>,
     /// The time the last bid was placed, used to keep track of auction timing.
     pub last_bid: Option<UnixTimestamp>,
     /// Slot time the auction was officially ended by.
@@ -168,11 +168,6 @@ impl AuctionDataExtended {
         } else {
             None
         }
-    }
-    //keep this as a single call function instead of array of accounts added
-    //otherwise people will just run it once and spam the entire global auction bids
-    pub fn addDegen(bid_size: u64){
-        
     }
 
     fn find_instant_sale_beginning<'a>(data: &'a Ref<'a, &'a mut [u8]>) -> Option<usize> {
@@ -503,8 +498,8 @@ pub struct Bid(pub Pubkey, pub u64);
 #[repr(C)]
 #[derive(Clone, BorshSerialize, BorshDeserialize, PartialEq, Debug)]
 pub enum BidState {
-    EnglishAuction { bids: Vec<Bid>, max: usize },
-    OpenEdition { bids: Vec<Bid>, max: usize },
+    //EnglishAuction { bids: Vec<Bid>, max: usize },
+    //OpenEdition { bids: Vec<Bid>, max: usize },
     GlobalAuction { bids:Vec<Bid>, max: usize}
 }
 
@@ -512,23 +507,25 @@ pub enum BidState {
 ///
 /// English Auction: this stores only the current winning bids in the auction, pruning cancelled
 /// and lost bids over time.
+/// 
+/// Global Auction: Never expires keeps a stack of bids like a Jenga tower waiting to go
 ///
 /// Open Edition: All bids are accepted, cancellations return money to the bidder and always
 /// succeed.
 impl BidState {
-    pub fn new_english(n: usize) -> Self {
+    /*pub fn new_english(n: usize) -> Self {
         BidState::EnglishAuction {
             bids: vec![],
             max: n,
         }
-    }
+    }*/
 
-    pub fn new_open_edition() -> Self {
+    /*pub fn new_open_edition() -> Self {
         BidState::OpenEdition {
             bids: vec![],
             max: 0,
         }
-    }
+    }*/
     //make sure the entirety of global bids doesnt get too big for the contract
     pub fn new_global_auction(n: usize) -> Self {
         BidState::GlobalAuction{
@@ -564,11 +561,7 @@ impl BidState {
         Ok(())
     }
 
-    fn assert_valid_gap_insertion(
-        gap_tick: u8,
-        beaten_bid: &Bid,
-        beating_bid: &Bid,
-    ) -> ProgramResult {
+    fn assert_valid_gap_insertion(gap_tick: u8, beaten_bid: &Bid, beating_bid: &Bid,) -> ProgramResult {
         // Use u128 to avoid potential overflow due to temporary mult of 100x since
         // we haven't divided yet.
         let mut minimum_bid_amount: u128 = (beaten_bid.1 as u128)
@@ -582,7 +575,6 @@ impl BidState {
             msg!("Rejecting inserting this bid due to gap tick size of {:?} which causes min bid of {:?} from {:?} which is the bid it is trying to beat", gap_tick, minimum_bid_amount.to_string(), beaten_bid.1);
             return Err(AuctionError::GapBetweenBidsTooSmall.into());
         }
-
         Ok(())
     }
 
@@ -594,7 +586,8 @@ impl BidState {
         tick_size: Option<u64>,
         gap_tick_size_percentage: Option<u8>,
         minimum: u64,
-        instant_sale_price: Option<u64>,
+        //no instant sales on a global auction
+        //instant_sale_price: Option<u64>,
         auction_state: &mut AuctionState,
     ) -> Result<(), ProgramError> {
         msg!("Placing bid {:?}", &bid.1.to_string());
@@ -605,7 +598,7 @@ impl BidState {
 
         match self {
             // In a capped auction, track the limited number of winners.
-            BidState::EnglishAuction { ref mut bids, max } => {
+            /*BidState::EnglishAuction { ref mut bids, max } => {
                 match bids.last() {
                     Some(top) => {
                         msg!("Looking to go over the loop, but check tick size first");
@@ -671,7 +664,8 @@ impl BidState {
 
             // In an open auction, bidding simply succeeds.
             BidState::OpenEdition { bids, max } => Ok(()),
-        }
+        */}
+        BidState::GlobalAuction
     }
 
     /// Cancels a bid, if the bid was a winning bid it is removed, if the bid is invalid the
@@ -682,7 +676,6 @@ impl BidState {
                 bids.retain(|b| b.0 != key);
                 Ok(())
             }
-
             // In an open auction, cancelling simply succeeds. It's up to the manager of an auction
             // to decide what to do with open edition bids.
             BidState::OpenEdition { bids, max } => Ok(()),
@@ -799,13 +792,11 @@ impl BidderMetadata {
         if a.data_len() != BIDDER_METADATA_LEN {
             return Err(AuctionError::DataTypeMismatch.into());
         }
-
         let bidder_meta: BidderMetadata = try_from_slice_unchecked(&a.data.borrow_mut())?;
-
         Ok(bidder_meta)
     }
 }
-/*
+
 #[repr(C)]
 #[derive(Clone, BorshSerialize, BorshDeserialize, PartialEq)]
 pub struct BidderPot {
@@ -824,9 +815,7 @@ impl BidderPot {
         if a.data_len() != mem::size_of::<BidderPot>() {
             return Err(AuctionError::DataTypeMismatch.into());
         }
-
         let bidder_pot: BidderPot = try_from_slice_unchecked(&a.data.borrow_mut())?;
-
         Ok(bidder_pot)
     }
     

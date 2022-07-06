@@ -16,7 +16,7 @@ use {
         pubkey::Pubkey,
     },
 };
-
+//this is to change authority
 pub fn set_authority(program_id: &Pubkey, accounts: &[AccountInfo]) -> ProgramResult {
     msg!("+ Processing SetAuthority");
     let account_iter = &mut accounts.iter();
@@ -26,15 +26,14 @@ pub fn set_authority(program_id: &Pubkey, accounts: &[AccountInfo]) -> ProgramRe
 
     let mut auction = AuctionData::from_account_info(auction_act)?;
     assert_owned_by(auction_act, program_id)?;
-
+    //check to see if the current authority is the one calling this
     if auction.authority != *current_authority.key {
         return Err(AuctionError::InvalidAuthority.into());
     }
-
+    //check to see if they signed the message
     if !current_authority.is_signer {
         return Err(AuctionError::InvalidAuthority.into());
     }
-
     // Make sure new authority actually exists in some form.
     if new_authority.data_is_empty() || new_authority.lamports() == 0 {
         msg!("Disallowing new authority because it does not exist.");

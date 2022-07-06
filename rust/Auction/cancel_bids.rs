@@ -36,6 +36,7 @@ use {
 #[repr(C)]
 #[derive(Clone, BorshSerialize, BorshDeserialize, PartialEq)]
 pub struct CancelBidArgs {
+    //potentially make this auction based instead of resource based
     pub resource: Pubkey,
 }
 
@@ -140,13 +141,11 @@ pub fn cancel_bid(
     let metadata_bump = assert_derivation(
         program_id,
         accounts.bidder_meta,
-        &[
-            PREFIX.as_bytes(),
+        &[  PREFIX.as_bytes(),
             program_id.as_ref(),
             accounts.auction.key.as_ref(),
             accounts.bidder.key.as_ref(),
-            "metadata".as_bytes(),
-        ],
+            "metadata".as_bytes(),],
     )?;
 
     // If metadata doesn't exist, error, can't cancel a bid that doesn't exist and metadata must
